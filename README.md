@@ -101,11 +101,47 @@ if (isset($_GET['file'])) {
         <button type="submit">Iniciar Sesión</button>
 </form>
 
-~~~
+~~~ 
 
 ![](images/rfi2.png)
 
+### Explotación de RFI
+---
+Para comprobar la explotación de RFI vamos a crear un archivo malicioso exploit.php en un servidor controlado por el atacante.
 
+En nuestro caso [exploit.php](files/exploit.php) lo vamos a colocar en nuestro servidor. Tendrá el siguiente contenido:
+
+
+~~~
+<?php
+echo "¡Servidor comprometido!";
+// Código malicioso, como una web shell o un backdoor
+?>
+~~~
+
+En esta ocasión sólo nos mostrará un mensaje, pero podría hacer muchas cosas más.
+
+Para ejecutarlo a través de la aplicación vulnerable colocando su dirección en nuestro campo
+
+![](images/rfi3.png)
+
+o bien concatenamos su dirección a la de nuestro archivo rfi.php:
+
+~~~
+http://localhost/rfi.php?file=http://localhost/exploit.php
+~~~
+
+Si el código del atacante se ejecuta en el servidor víctima, significa que la aplicación es vulnerable.
+
+**Posibles efectos del ataque:**
+
+- Acceso no autorizado al servidor.
+
+- Robo de datos sensibles.
+
+- Modificación o eliminación de archivos del sistema.
+
+- Instalación de malware o puertas traseras (backdoors).
 
 ## Mitigación de RFI
 ---
@@ -113,6 +149,20 @@ if (isset($_GET['file'])) {
 La solución más efectiva para eliminar las vulnerabilidades de inclusión de archivos es evitar pasar la entrada enviada por el usuario a cualquier API de sistema de archivos/marco. Si esto no es posible, la aplicación puede mantener una lista de permisos de archivos que puede incluir la página y, a continuación, utilizar un identificador (por ejemplo, el número de índice) para acceder al archivo seleccionado. Cualquier solicitud que contenga un identificador no válido debe rechazarse para que no haya oportunidad de que los usuarios maliciosos manipulen la ruta. Mira el [Archivo de Hoja de Trucos para buenas prácticas de seguridad](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) en este tema.
 
 Vamos realizando operaciones.
+
+* Bloquear la inclusión de URLs externas
+En lugar de permitir cualquier entrada sin validación, se debe bloquear la inclusión de archivos remotos:
+<?php
+// Obtener el parámetro 'file' de la URL
+$file = $_GET['file'] ?? '';
+// Bloquear URLs externas
+if (filter_var($file, FILTER_VALIDATE_URL)) {
+die("Incluir archivos remotos está prohibido.");
+}
+// Incluir el archivo sin más restricciones (Aún vulnerable a LFI)
+include($file);
+?>
+Sin embargo, esta solución no es suficiente, ya que aún permite archivos locales maliciosos.
 
 
 ### **Código seguro**
