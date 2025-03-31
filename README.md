@@ -150,20 +150,110 @@ La solución más efectiva para eliminar las vulnerabilidades de inclusión de a
 
 Vamos realizando operaciones.
 
-* Bloquear la inclusión de URLs externas
+**Bloquear la inclusión de URLs externas**
+
 En lugar de permitir cualquier entrada sin validación, se debe bloquear la inclusión de archivos remotos:
+
+~~~
 <?php
-// Obtener el parámetro 'file' de la URL
-$file = $_GET['file'] ?? '';
-// Bloquear URLs externas
-if (filter_var($file, FILTER_VALIDATE_URL)) {
-die("Incluir archivos remotos está prohibido.");
+// Verificar si se ha pasado un archivo por parámetro
+if (isset($_GET['file'])) {
+        $file = $_GET['file'];
+        // Bloquear URLs externas
+        if (filter_var($file, FILTER_VALIDATE_URL)) {
+                die("Incluir archivos remotos está prohibido.");
+        }
+        // Incluir el archivo sin más restricciones (Aún vulnerable a LFI)
+        include($file);
 }
-// Incluir el archivo sin más restricciones (Aún vulnerable a LFI)
-include($file);
+
 ?>
+<form method="GET">
+        <input type="text" name="file" placeholder="Usuario">
+        <button type="submit">Iniciar Sesión</button>
+</form>
+~~~
+Como vemos ya no nos deja meter direcciones url, ya que aplicamos un filtro de validación de URLs.
+
+![](images/rfi3.png)
+
 Sin embargo, esta solución no es suficiente, ya que aún permite archivos locales maliciosos.
 
+**Restringir las rutas de inclusión**
+
+La siguiente aproximación, sería limitar la inclusión de archivos solo a una lista de archivos específicos dentro del servidor:
+~~~
+<?php
+// Verificar si se ha pasado un archivo por parámetro
+if (isset($_GET['file'])) {
+        $file = $_GET['file'];
+        // Lista blanca de archivos permitidos
+        $whitelist = ['file1.php', 'files/file2.php'];
+        if (!in_array($file, $whitelist)) {
+                die("Acceso denegado.");
+        }
+        // Incluir solo archivos de la lista blanca
+        include($file);
+}
+
+?>
+<form method="GET">
+        <input type="text" name="file" placeholder="Usuario">
+        <button type="submit">Iniciar Sesión</button>
+</form>
+
+En esta ocasión nos dejaría el acceso a los ficheros file1.php y a /files/file2.php
+
+**Usar rutas absolutas y sanitización**
+
+Podemos ir un paso más allá asegurándonos que solo se incluyan archivos desde una ubicación específica, en este caso el mismo directorio que el script:
+
+~~~
+<?php
+// Establecemos el directorio permitido en el mismo directorio del script
+$baseDir = __DIR__ . DIRECTORY_SEPARATOR;
+
+if (isset($_GET['file'])) {
+    $file = $_GET['file'];
+
+    // Normalizamos la ruta para evitar ataques con '../'
+    $filePath = realpath($baseDir . $file);
+    // Verificamos si el archivo está dentro del directorio permitido
+    if ($filePath === false || strpos($filePath, $baseDir) !== 0) {
+        die("Acceso denegado.");
+    }
+
+    // Verificamos que el archivo realmente existe
+    if (!file_exists($filePath)) {
+        die("El archivo no existe.");
+    }
+    include($file);
+
+}
+?>
+<form method="GET">
+        <input type="text" name="file" placeholder="Usuario">
+        <button type="submit">Iniciar Sesión</button>
+</form>
+
+~~~
+
+Ahora sólo nos dejara incluir archivos del directorio actual.
+
+**Deshabilitar allow_url_include en php.ini**
+
+Para prevenir la inclusión remota de archivos en PHP:
+allow_url_include = Off
+Esta opción debe configurarse en el servidor y previene ataques RFI globalmente.
+~~~
+mkdir includes; cp file1.php includes/file3.php
+~~~
+![](images/rfi3.png)
+![](images/rfi3.png)
+![](images/rfi3.png)
+![](images/rfi3.png)
+![](images/rfi3.png)
+![](images/rfi3.png)
 
 ### **Código seguro**
 ---
