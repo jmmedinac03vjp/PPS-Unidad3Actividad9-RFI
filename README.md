@@ -4,9 +4,9 @@ Explotación y Mitigación de Remote File Inclusion (RFI)
 Explotación y Mitigación de ().
 Tenemos como objetivo:
 
-> - Ver cómo se pueden hacer ataques .
+> - Ver cómo se pueden hacer ataques Inclusión de Archivos Remotosn (RFI).
 >
-> - Analizar el código de la aplicación que permite ataques de .
+> - Analizar el código de la aplicación que permite ataques de Inclusión de Archivos Remotosn (RFI).
 >
 > - Implementar diferentes modificaciones del codigo para aplicar mitigaciones o soluciones.
 
