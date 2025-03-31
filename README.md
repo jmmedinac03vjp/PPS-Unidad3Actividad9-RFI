@@ -73,16 +73,6 @@ docker-compose restart webserver
 
 Aquí puedes encontrar el fichero de configuración [php.ini](files/php.ini.rfi).
 
-
-
-Ejecutar el siguiente comando en la terminal como root para modificar php.ini y así deshabilitar todas las restricciones:
-sudo sed -i 's/^disable_functions.*/disable_functions =/' /etc/php/8.2/apache2/php.ini && \
-sudo sed -i 's/^allow_url_include.*/allow_url_include = On/' /etc/php/8.2/apache2/php.ini &&
-\
-sudo sed -i 's/^allow_url_fopen.*/allow_url_fopen = On/' /etc/php/8.2/apache2/php.ini && \
-sudo sed -i 's/^open_basedir.*/;open_basedir =/' /etc/php/8.2/apache2/php.ini && \
-sudo systemctl restart apache2
-
 ¿Qué hacemos con estas configuraciones?
 
 1. Elimina todas las funciones deshabilitadas (disable_functions vacío).
@@ -93,13 +83,29 @@ sudo systemctl restart apache2
 
 4. Desactiva open_basedir para permitir la ejecución en cualquier directorio.
 
-5. Reinicia Apache para aplicar los cambios.
 ## Código vulnerable
 ---
 
+Tenemos el siguiente código vulnerable al cual le tenemos que indicar un fichero a subir al servidor:
+~~~
+?php
+// Verificar si se ha pasado un archivo por parámetro
+if (isset($_GET['file'])) {
+        $file = $_GET['file'];
+        include($file);
+}
+
+?>
+<form method="GET">
+        <input type="text" name="file" placeholder="Usuario">
+        <button type="submit">Iniciar Sesión</button>
+</form>
+
+~~~
+
+![](images/rfi2.png)
 
 
-![](images/.png)
 
 ## Mitigación de RFI
 ---
