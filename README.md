@@ -205,6 +205,7 @@ if (isset($_GET['file'])) {
         <input type="text" name="file" placeholder="Usuario">
         <button type="submit">Iniciar Sesión</button>
 </form>
+~~~
 
 En esta ocasión nos dejaría el acceso a los ficheros file1.php y a /files/file2.php
 
