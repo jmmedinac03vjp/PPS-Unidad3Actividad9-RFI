@@ -9,7 +9,7 @@ Tenemos como objetivo:
 >
 > - Implementar diferentes modificaciones del codigo para aplicar mitigaciones o soluciones.
 
-## ¿Qué es CSRF?
+## ¿Qué es Remote File Include?
 ---
 
 La vulnerabilidad de Inclusión de archivos permite a un atacante incluir un archivo, generalmente explotando un mecanismo “dynamic file inclusion” implementado en la aplicación de destino. La vulnerabilidad se produce debido al uso de la entrada suministrada por el usuario sin la validación adecuada.
@@ -30,9 +30,9 @@ Remote File Inclusion (también conocido como RFI) es el proceso de incluir arch
 ---
 > Lee detenidamente la sección de vulnerabilidades de subida de archivos.  de la página de PortWigger <https://portswigger.net/web-security/file-upload>
 >
-> Lee el siguiente [documento sobre Explotación y Mitigación de ataques de Remote Code Execution](./files/ExplotacionYMitigacionRFI.pdf>
+> Lee el siguiente [documento sobre Explotación y Mitigación de ataques de Remote Code Execution](./files/ExplotacionYMitigacionRFI.pdf)
 > 
-> También y como marco de referencia, tienes [ la sección de correspondiente de ataque de inclusión de archivos remotos de la **Proyecto Web Security Testing Guide** (WSTG) del proyecto **OWASP**.]<https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.2-Testing_for_Remote_File_Inclusion>
+> También y como marco de referencia, tienes [ la sección de correspondiente de ataque de inclusión de archivos remotos de la **Proyecto Web Security Testing Guide** (WSTG) del proyecto **OWASP**.](https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.2-Testing_for_Remote_File_Inclusion)
 >
 
 ### Configuración para deshabilitar la seguridad en PHP 8.2 (sólo para pruebas)
@@ -98,12 +98,12 @@ if (isset($_GET['file'])) {
 ?>
 <form method="GET">
         <input type="text" name="file" placeholder="Usuario">
-        <button type="submit">Iniciar Sesión</button>
+        <button type="submit">Subir Archivo</button>
 </form>
 
 ~~~ 
 
-![](images/rfi2.png)
+![](images/rfi3.png)
 
 ### Explotación de RFI
 ---
@@ -119,19 +119,23 @@ echo "¡Servidor comprometido!";
 ?>
 ~~~
 
+
 En esta ocasión sólo nos mostrará un mensaje, pero podría hacer muchas cosas más.
 
 Para ejecutarlo a través de la aplicación vulnerable colocando su dirección en nuestro campo
-
 ![](images/rfi3.png)
 
+
 o bien concatenamos su dirección a la de nuestro archivo rfi.php:
+
 
 ~~~
 http://localhost/rfi.php?file=http://localhost/exploit.php
 ~~~
 
 Si el código del atacante se ejecuta en el servidor víctima, significa que la aplicación es vulnerable.
+
+![](images/rfi2.png)
 
 **Posibles efectos del ataque:**
 
@@ -251,12 +255,6 @@ Esto, como hemos visto anteriormente se hace configurando la variable allow_url_
 allow_url_include = Off
 ~~~
 
-![](images/rfi3.png)
-![](images/rfi3.png)
-![](images/rfi3.png)
-![](images/rfi3.png)
-![](images/rfi3.png)
-![](images/rfi3.png)
 
 ### **Código seguro**
 ---
