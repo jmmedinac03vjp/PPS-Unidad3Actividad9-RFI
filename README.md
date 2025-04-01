@@ -242,12 +242,15 @@ Ahora sólo nos dejara incluir archivos del directorio actual.
 
 **Deshabilitar allow_url_include en php.ini**
 
-Para prevenir la inclusión remota de archivos en PHP:
+Para prevenir la inclusión remota de archivos en PHP podemos configurar el servidor para que acepte únicamente archivos locales y no archivos remotos.
+
+Esto, como hemos visto anteriormente se hace configurando la variable allow_url_include en el archivo php.ini. Esta opción previene ataques RFI globalmente.
+ 
+
+~~~ 
 allow_url_include = Off
-Esta opción debe configurarse en el servidor y previene ataques RFI globalmente.
 ~~~
-mkdir includes; cp file1.php includes/file3.php
-~~~
+
 ![](images/rfi3.png)
 ![](images/rfi3.png)
 ![](images/rfi3.png)
@@ -260,23 +263,48 @@ mkdir includes; cp file1.php includes/file3.php
 
 Aquí está el código securizado:
 
+~~~
+?php
+// Establecemos el directorio permitido en el mismo directorio del script
+$baseDir = __DIR__ . DIRECTORY_SEPARATOR;
+$whitelist = ['file1.php', 'file2.php'];
+
+if (isset($_GET['file'])) {
+        $file = $_GET['file'];
+        // Bloquear URLs externas
+        if (filter_var($file, FILTER_VALIDATE_URL)) {
+                die("Incluir archivos remotos está prohibido.");
+        }
+        // Normalizamos la ruta para evitar ataques con '../'
+        $filePath = realpath($baseDir . $file);
+        // Verificamos si el archivo está dentro del directorio permitido
+        if ($filePath === false || strpos($filePath, $baseDir) !== 0) {
+            die("Acceso denegado.");
+        }
+       // Lista blanca de archivos permitidos
+        if (!in_array($file, $whitelist)) {
+                die("Acceso denegado.");
+        }
+ 
+        // Verificamos que el archivo realmente existe
+        if (!file_exists($filePath)) {
+            die("El archivo no existe.");
+        }
+        include($file);
+
+}
+?>
+<form method="GET">
+        <input type="text" name="file" placeholder="Usuario">
+        <button type="submit">Iniciar Sesión</button>
+</form>
+
+~~~
 🔒 Medidas de seguridad implementadas
 
-- :
-
-        - 
-
-        - 
-
-
-
-🚀 Resultado
-
-✔ 
-
-✔ 
-
-✔ 
+- Bloqueadas URLs externas.
+- Sanitización de ruta (eliminar ../ y evitar que el archivo no tenga caracteres maliciosos).
+- Uso de lista blanca de archivos.
 
 ### Dejando todo en orden
 ----
@@ -286,12 +314,6 @@ Recuerda volver a poner el archivo php.ini original:
 ~~~
 cd /usr/local/etc/php/
 cp php.ini-original php.ini
-~~~
-
-Una vez cambiada la configuración, reiniciamos el servicio o en el caso de que utilicemos docker, reiniciamos el contenedor:
-
-~~~
-docker-compose restart webserver
 ~~~
 
 
